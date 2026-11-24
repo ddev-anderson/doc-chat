@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { validateEnv } from './config/env.validation.js';
 import { createTypeOrmOptions } from './database/typeorm.config.js';
+import { DocumentsModule } from './documents/documents.module.js';
 import { HealthController } from './health/health.controller.js';
 import { HealthService } from './health/health.service.js';
 
@@ -16,6 +17,7 @@ import { HealthService } from './health/health.service.js';
       inject: [ConfigService],
       useFactory: createTypeOrmOptions,
     }),
+    DocumentsModule,
   ],
   controllers: [HealthController],
   providers: [HealthService],
