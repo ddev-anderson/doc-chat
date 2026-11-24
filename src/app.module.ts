@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ChatModule } from './chat/chat.module.js';
 import { validateEnv } from './config/env.validation.js';
 import { createTypeOrmOptions } from './database/typeorm.config.js';
 import { DocumentsModule } from './documents/documents.module.js';
@@ -20,6 +21,7 @@ import { RetrievalModule } from './retrieval/retrieval.module.js';
     }),
     DocumentsModule,
     RetrievalModule,
+    ChatModule,
   ],
   controllers: [HealthController],
   providers: [HealthService],

@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Ask your documents and get grounded answers with cited passages."
+    />
+    <title>doc-chat</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <div class="site-header__text">
+          <h1>doc-chat</h1>
+          <p id="site-subtitle">
+            Answers come only from your documents, with the passages they cite.
+          </p>
+        </div>
+        <button id="view-toggle" class="text-link" type="button">
+          Documents
+        </button>
+      </header>
+
+      <div id="global-message" class="alert" role="alert" hidden></div>
+
+      <main>
+        <section id="chat-view" class="view">
+          <div
+            id="chat-messages"
+            class="chat-messages"
+            aria-live="polite"
+          ></div>
+
+          <form id="chat-form" class="composer" novalidate>
+            <label class="composer__label" for="chat-input">
+              Ask the documents
+            </label>
+            <div class="composer__row">
+              <input
+                id="chat-input"
+                type="text"
+                maxlength="2000"
+                placeholder="What are the payment terms in the contract?"
+                autocomplete="off"
+              />
+              <button id="chat-submit" class="button button--ask" type="submit">
+                Ask
+              </button>
+              <button
+                id="chat-new"
+                class="button button--new"
+                type="button"
+                disabled
+              >
+                New chat
+              </button>
+            </div>
+          </form>
+          <div
+            id="chat-feedback"
+            class="feedback"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></div>
+        </section>
+
+        <section id="documents-view" class="view" hidden>
+          <div class="documents-grid">
+            <section class="card" aria-labelledby="upload-title">
+              <div class="card__header">
+                <h2 id="upload-title">Upload document</h2>
+                <span class="hint">.txt · .md · .markdown · up to 5 MB</span>
+              </div>
+              <p class="muted card__description">
+                The text is extracted, split into chunks and embedded with
+                <code>bge-m3</code>.
+              </p>
+
+              <form id="upload-form" novalidate>
+                <label
+                  id="dropzone"
+                  class="dropzone"
+                  for="file-input"
+                  tabindex="0"
+                >
+                  <input
+                    id="file-input"
+                    class="dropzone__input"
+                    type="file"
+                    accept=".txt,.md,.markdown,text/plain,text/markdown"
+                  />
+                  <span class="dropzone__icon" aria-hidden="true">↑</span>
+                  <span class="dropzone__title">
+                    Drag a file here or click to choose
+                  </span>
+                  <span class="dropzone__subtitle">
+                    TXT, Markdown or a UTF-8 text file.
+                  </span>
+                </label>
+
+                <div id="file-info" class="file-info" hidden>
+                  <div class="file-info__main">
+                    <strong id="file-name"></strong>
+                    <span id="file-meta" class="muted"></span>
+                  </div>
+                  <button
+                    id="clear-file"
+                    class="button button--new"
+                    type="button"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <button
+                  id="upload-button"
+                  class="button button--ask button--full"
+                  type="submit"
+                  disabled
+                >
+                  Upload and generate embeddings
+                </button>
+              </form>
+
+              <div
+                id="upload-feedback"
+                class="feedback"
+                role="status"
+                aria-live="polite"
+                hidden
+              ></div>
+              <div id="upload-result" class="upload-result" hidden></div>
+              <details id="upload-raw" class="raw" hidden>
+                <summary>Response JSON</summary>
+                <pre id="upload-raw-content"></pre>
+              </details>
+            </section>
+
+            <section class="card" aria-labelledby="documents-title">
+              <div class="card__header">
+                <h2 id="documents-title">Documents in the database</h2>
+                <button
+                  id="refresh-documents"
+                  class="button button--new"
+                  type="button"
+                >
+                  Refresh
+                </button>
+              </div>
+              <p class="muted card__description">
+                The list comes from <code>GET /documents</code>, reading
+                PostgreSQL directly.
+              </p>
+
+              <div id="documents-count" class="count">—</div>
+              <ul
+                id="documents-list"
+                class="document-list"
+                aria-live="polite"
+              ></ul>
+              <div id="documents-empty" class="empty" hidden>
+                <strong>No documents saved.</strong>
+                <span>Upload a file to get started.</span>
+              </div>
+              <div
+                id="documents-feedback"
+                class="feedback"
+                role="status"
+                aria-live="polite"
+                hidden
+              ></div>
+            </section>
+
+            <section class="card" aria-labelledby="search-title">
+              <div class="card__header">
+                <h2 id="search-title">Search chunks</h2>
+                <span class="hint">pgvector check</span>
+              </div>
+              <p class="muted card__description">
+                Direct semantic search without the LLM. Useful for inspecting
+                scores and confirming embeddings.
+              </p>
+
+              <form id="search-form" class="search-form" novalidate>
+                <label class="field field--grow">
+                  <span>Query</span>
+                  <input
+                    id="search-query"
+                    type="text"
+                    maxlength="2000"
+                    placeholder="What are the payment terms in the contract?"
+                    required
+                  />
+                </label>
+                <label class="field field--small">
+                  <span>top-k</span>
+                  <input
+                    id="search-topk"
+                    type="number"
+                    min="1"
+                    max="50"
+                    value="5"
+                    inputmode="numeric"
+                  />
+                </label>
+                <label class="field field--small">
+                  <span>min score</span>
+                  <input
+                    id="search-minscore"
+                    type="number"
+                    min="-1"
+                    max="1"
+                    step="0.05"
+                    value="0.5"
+                    inputmode="decimal"
+                  />
+                </label>
+                <button
+                  id="search-button"
+                  class="button button--ask"
+                  type="submit"
+                >
+                  Search
+                </button>
+              </form>
+
+              <div
+                id="search-feedback"
+                class="feedback"
+                role="status"
+                aria-live="polite"
+                hidden
+              ></div>
+              <div id="search-summary" class="search-summary" hidden></div>
+              <div id="search-results" class="results" aria-live="polite"></div>
+              <details id="search-raw" class="raw" hidden>
+                <summary>Response JSON</summary>
+                <pre id="search-raw-content"></pre>
+              </details>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
