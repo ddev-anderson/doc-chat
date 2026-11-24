@@ -6,6 +6,7 @@ import { createTypeOrmOptions } from './database/typeorm.config.js';
 import { DocumentsModule } from './documents/documents.module.js';
 import { HealthController } from './health/health.controller.js';
 import { HealthService } from './health/health.service.js';
+import { RetrievalModule } from './retrieval/retrieval.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { HealthService } from './health/health.service.js';
       useFactory: createTypeOrmOptions,
     }),
     DocumentsModule,
+    RetrievalModule,
   ],
   controllers: [HealthController],
   providers: [HealthService],
